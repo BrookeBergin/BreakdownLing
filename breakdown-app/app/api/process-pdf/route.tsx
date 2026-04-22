@@ -45,16 +45,18 @@ export async function POST(req: Request) {
       model: "gemini-3-flash-preview",
     });
 
-    const result = await model.generateContent(`
-Summarize and structure this document:
+    const prompt = `You will be given a research paper. Analyze the paper and return a valid JSON object with ONLY these keys: title, author, date, summary, litReview, researchQuestions, methodology, participants, findings, vocabulary, definitions. Return ONLY valid JSON, no other text. For summary, give a general overview of the text using language that a non-expert can understand. For literature review, summarize the related work mentioned in the paper. For research questions, list the research questions or hypotheses proposed by the authors. For methodology, describe the methods used to conduct the research. For participants, provide details about the participants involved in the study. For findings, summarize the key findings of the research. For vocabulary, list any technical terms used in the paper and used in your output, and put the corresponding definitions in definitions. Here is the research'
 
-${text}
-    `);
+Paper content:
+${text}`;
 
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const output = response.text();
 
-    return Response.json({ output });
+    const parsed = JSON.parse(output);
+
+    return Response.json({ output: parsed });
 
   } catch (err: any) {
     console.error(err);
