@@ -10,7 +10,11 @@ function parsePDF(buffer: Buffer): Promise<string> {
     const parser = new PDFParser();
 
     parser.on("pdfParser_dataError", (err) => {
-      reject(err.parserError);
+      if ('parserError' in err) {
+        reject(err.parserError);
+      } else {
+        reject(err);
+      }
     });
 
     parser.on("pdfParser_dataReady", (pdfData) => {
