@@ -1,3 +1,5 @@
+"use client";
+
 import { AppBar, Toolbar, Typography, Button, Link } from '@mui/material';
 
 export default function NavBar() {
@@ -5,24 +7,29 @@ export default function NavBar() {
     <AppBar sx={{ 
         position: 'sticky', 
         top: 0, 
-        backgroundColor: '#1D2D44',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #1d2d4478',
+        boxShadow: 'none',
         }}>
-      <Toolbar>
+      <Toolbar sx={{ gap: '5px', marginLeft: '40px', marginRight: '40px' }}>
         <Typography variant="h6" component="div" sx={{ 
             flexGrow: 1, 
             fontFamily: 'calibri, sans-serif',
+            color: '#1D2D44',
             }}>
           BreakdownLing
         </Typography>
         <Link href="/" style={{ textDecoration: 'none' }}>
             <Button 
             sx={{ 
-                color: '#ffffff',
+                color: '#1D2D44',
+                backgroundColor: '#ffffff',
                 fontSize: '1rem',
                 fontWeight: '500',
                 textTransform: 'capitalize',
+                border: '1px solid #1D2D44',
                 '&:hover': {
-                backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                  backgroundColor: '#f0f0f0',
                 }
             }}
             >
@@ -33,11 +40,12 @@ export default function NavBar() {
             <Button 
             sx={{ 
                 color: '#ffffff',
+                backgroundColor: '#1D2D44',
                 fontSize: '1rem',
                 fontWeight: '500',
                 textTransform: 'capitalize',
                 '&:hover': {
-                backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                  backgroundColor: '#153854',
                 }
             }}
             >
