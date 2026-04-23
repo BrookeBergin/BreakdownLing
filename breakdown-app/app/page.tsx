@@ -22,6 +22,7 @@ export default function Home() {
                     fontWeight: 'bold',
                     marginBottom: 24,
                     letterSpacing: '-0.04em',
+                    color:`#1D2D44`
                 }}
                 >
                     Breakdown: Demystify Linguistics Research
@@ -36,7 +37,7 @@ export default function Home() {
                 >Summarize and comprehend research papers in just a few clicks</p>
             </div>
             <div style={{display: 'flex', gap: '16px'}}>
-                <Link href="/" style={{ textDecoration: 'none' }}>
+                <Link href="/about" style={{ textDecoration: 'none' }}>
                     <Button 
                     variant="contained"
                     sx={{ 
