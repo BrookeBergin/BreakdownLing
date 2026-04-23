@@ -105,14 +105,18 @@ export default function NavBar() {
         boxShadow: 'none',
         }}>
       <Toolbar sx={{ gap: '5px', marginLeft: '40px', marginRight: '40px' }}>
-        <Typography variant="h6" component="div" sx={{ 
-            flexGrow: 1, 
-            fontFamily: 'calibri, sans-serif',
-            color: '#1D2D44',
-            }}>
-          BreakdownLing
-        </Typography>
-        <Link href="/" style={{ textDecoration: 'none' }}>
+        
+          <Typography variant="h6" component="div" sx={{ 
+              flexGrow: 1, 
+              fontFamily: 'calibri, sans-serif',
+              color: '#1D2D44',
+              }}>
+              <Link href="/" style={{ textDecoration: 'none', fontFamily: 'calibri, sans-serif',
+              color: '#1D2D44', }}>
+                BreakdownLing
+              </Link>
+            </Typography>
+        <Link href="/about" style={{ textDecoration: 'none' }}>
             <Button 
             sx={{ 
                 color: '#1D2D44',
