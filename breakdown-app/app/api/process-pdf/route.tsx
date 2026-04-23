@@ -2,8 +2,13 @@ export const runtime = "nodejs";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import PDFParser from "pdf2json";
+import { createClient } from "@supabase/supabase-js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 function parsePDF(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -45,7 +50,7 @@ export async function POST(req: Request) {
       model: "gemini-3-flash-preview",
     });
 
-    const prompt = `You will be given a research paper. Analyze the paper and return a valid JSON object with ONLY these keys: title, author, date, summary, litReview, researchQuestions, methodology, participants, findings, vocabulary, definitions. Return ONLY valid JSON, no other text. For summary, give a general overview of the text using language that a non-expert can understand. For literature review, summarize the related work mentioned in the paper. For research questions, list the research questions or hypotheses proposed by the authors. For methodology, describe the methods used to conduct the research. For participants, provide details about the participants involved in the study. For findings, summarize the key findings of the research. For vocabulary, list any technical terms used in the paper and used in your output, and put the corresponding definitions in definitions. Here is the research'
+    const prompt = `You will be given a research paper. Return ONLY raw json. Do not wrap in ''' or ''' json. Analyze the paper and return a valid JSON object with ONLY these keys: title, author, date, summary, litReview, researchQuestions, methodology, participants, findings, vocabulary, definitions. Return ONLY valid JSON, no other text. For summary, give a general overview of the text using language that a non-expert can understand. For literature review, summarize the related work mentioned in the paper. For research questions, list the research questions or hypotheses proposed by the authors. For methodology, describe the methods used to conduct the research. For participants, provide details about the participants involved in the study. For findings, summarize the key findings of the research. For vocabulary, list any technical terms used in the paper and used in your output, and put the corresponding definitions in definitions. Here is the research'
 
 Paper content:
 ${text}`;
@@ -55,6 +60,14 @@ ${text}`;
     const output = response.text();
 
     const parsed = JSON.parse(output);
+
+    const userId = formData.get("userId");
+
+    await supabase.from("papers").insert({
+      user_id: userId,
+      title: parsed.title,
+      summary: parsed,
+    });
 
     return Response.json({ output: parsed });
 
