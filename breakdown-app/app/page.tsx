@@ -3,12 +3,23 @@
 import { useState } from "react";
 import Image from 'next/image';
 import { Typography, Button, Link } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
 
+const CardStyle = styled(Paper)(({ theme }) => ({
+  minHeight: 100,
+  padding: theme.spacing(2),
+  ...theme.typography.body2,
+  textAlign: 'center',
+  
+}));
 
 export default function Home() {
   
 
   return (
+    <div>
     <div style={{ 
         padding: 64,
         height: 636,
@@ -77,5 +88,60 @@ export default function Home() {
         </div>
       
     </div>
-  );
+    <div style={{margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', paddingBottom: 64}}>
+        <Stack direction="row" spacing={2}>
+            <CardStyle variant="elevation">
+                <p
+                    style={{
+                        fontSize: 30,
+                        marginBottom: 24,
+                        letterSpacing: '-0.04em',
+                        color: `#1D2D44`,
+                    }}
+                >
+                    1: Make a free account
+                </p>
+            </CardStyle>
+            <CardStyle variant="elevation">
+                <p
+                    style={{
+                        fontSize: 30,
+                        marginBottom: 24,
+                        letterSpacing: '-0.04em',
+                        color: `#1D2D44`,
+                    }}
+                >
+                    2: Upload a research paper
+                </p>
+            </CardStyle>
+            <CardStyle variant="elevation">
+                <p
+                    style={{
+                        fontSize: 30,
+                        marginBottom: 24,
+                        letterSpacing: '-0.04em',
+                        color: `#1D2D44`,
+                    }}
+                >
+                    3: Receive a Breakdown
+                </p>
+            </CardStyle>
+            <CardStyle variant="elevation">
+                <p
+                    style={{
+                        fontSize: 30,
+                        marginBottom: 24,
+                        letterSpacing: '-0.04em',
+                        color: `#1D2D44`,
+                    }}
+                >
+                    4: Join the discussion
+                </p>
+            </CardStyle>
+        
+                    
+                </Stack>
+    </div>
+    </div>
+    );
 }
