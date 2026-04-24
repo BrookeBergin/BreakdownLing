@@ -12,6 +12,7 @@ const CardStyle = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   ...theme.typography.body2,
   textAlign: 'center',
+  border: '1px solid #748cabff',
   
 }));
 
@@ -89,6 +90,16 @@ export default function Home() {
       
     </div>
     <div style={{margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', paddingBottom: 64}}>
+        <p
+                style={{
+                    fontSize: 40,
+                    marginBottom: 24,
+                    letterSpacing: '-0.04em',
+                    color:`#1D2D44`
+                }}
+                >
+                    How does it work?
+                </p>
         <Stack direction="row" spacing={2}>
             <CardStyle variant="elevation">
                 <p
