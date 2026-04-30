@@ -5,6 +5,18 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Button, Dialog, DialogTitle, DialogContent, IconButton, Tabs, Tab, Box } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { UNSTABLE_REVALIDATE_RENAME_ERROR } from "next/dist/lib/constants";
+
+function makePaperKey(title: string) {
+  return crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(title.toLowerCase().trim())
+  ).then(buf =>
+    Array.from(new Uint8Array(buf))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,13 +25,21 @@ export default function Home() {
   const [papers, setPapers] = useState<any[]>([]);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<any[]>([]);
-  const [paperId, setPaperId] = useState<string | null>(null);
+  // const [paperId, setPaperId] = useState<string | null>(null);
+  const [paperKey, setPaperKey] = useState<string | null>(null);
   const router = useRouter();
   const [loadingUser, setLoadingUser] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<string>('summary');
+
+  const displayName =
+  user?.user_metadata?.display_name ||
+  user?.user_metadata?.name ||
+  user?.email ||
+  "anonymous";
+
 
   const normalizeVocabulary = (data: any): Array<{ term: string; definition: string }> => {
     const entries: Array<{ term: string; definition: string }> = [];
@@ -66,10 +86,16 @@ export default function Home() {
     return Object.entries(deduped).map(([term, definition]) => ({ term, definition }));
   };
 
-  async function handleUpload() {
-    const id = crypto.randomUUID();
-    setPaperId(id)
+  async function makePaperKey(title: string) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(title.toLowerCase().trim());
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
 
+  async function handleUpload() {
     if (!file) return;
 
     setLoading(true);
@@ -77,7 +103,6 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("paper_id", id);
 
     const res = await fetch("/api/process-pdf", {
       method: "POST",
@@ -95,41 +120,50 @@ export default function Home() {
       setOutput(data.output);
     }
 
-    setPaperId(paperId);
+    const parsed =
+      typeof data.output === "string"
+        ? JSON.parse(data.output)
+        : data.output;
+
+    const key = await makePaperKey(parsed.title);
+    setPaperKey(key);
+    setOutput(parsed);
     setLoading(false);
   }
 
-  async function loadComments(paperId: string) {
+  async function loadComments(paperKey: string) {
     const { data } = await supabase
       .from("comments")
       .select("*")
-      .eq("paper_id", paperId)
+      .eq("paper_id", paperKey)
       .order("created_at", { ascending: true });
 
     setComments(data || []);
   }
 
   async function addComment() {
-    if (!commentText || !paperId || !user?.email) return;
+    if (!commentText || !paperKey || !user?.email) return;
+
+    const text = commentText.trim();
+    if (!text) return;
+
+    const tempId = crypto.randomUUID();
 
     const newComment = {
-      id: crypto.randomUUID(),
-      paper_id: paperId,
-      user_email: user.email,
-      content: commentText,
-      user_id: user?.id,
+      id: tempId,
+      paper_key: paperKey,
+      display_name: displayName,
+      content: text,
     };
 
-    // optimistic UI
     setComments((prev) => [...prev, newComment]);
     setCommentText("");
 
     const { error } = await supabase.from("comments").insert({
-      paper_id: paperId,
-      user_email: user.email,
-      content: newComment.content,
+      paper_key: paperKey,
+      display_name: displayName,
+      content: text,
     });
-
     if (error) {
       console.log("COMMENT ERROR:", error.message, error.details, error.hint);
 
@@ -138,60 +172,17 @@ export default function Home() {
     }
   }
 
-  // async function addComment() {
-  // if (!commentText || !paperId) return;
-
-  //   const newComment = {
-  //     id: crypto.randomUUID(),
-  //     paper_id: paperId,
-  //     user_email: user?.email,
-  //     content: commentText,
-  //   };
-
-  //   // 1. instantly update UI
-  //   setComments((prev) => [...prev, newComment]);
-
-  //   setCommentText("");
-
-  //   // 2. persist to database
-  //   const { error } = await supabase.from("comments").insert({
-  //     paper_id: paperId,
-  //     user_email: user?.email,
-  //     content: newComment.content,
-  //   });
-
-  //   // 3. if DB fails, rollback by refetching
-  //   if (error) {
-  //     console.log("COMMENT ERROR:", error.message, error.details, error.hint);
-  //       setComments((prev) => prev.filter(c => c.id !== newComment.id));
-
-  //   }
-  // }
-
   useEffect(() => {
-    if (!output) return;
-
-    try {
-      const parsed =
-        typeof output === "string" ? JSON.parse(output) : output;
-
-      if (paperId) {
-        loadComments(paperId);
-      }
-    } catch (e) {
-      console.log("parse failed", e);
-    }
-  }, [output]);
+      if (!paperKey) return;
+      loadComments(paperKey);
+    }, [paperKey]);
 
   useEffect(() => {
     async function checkUser() {
       const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-        });
-        return;
+        window.dispatchEvent(new Event("open-login"));
       } else {
         setUser(data.user);
       }
@@ -202,24 +193,73 @@ export default function Home() {
     checkUser();
   }, []);
 
-  useEffect(() => {
-    if (!output) return;
-
-    try {
-      const parsed =
-        typeof output === "string" ? JSON.parse(output) : output;
-
-      if (paperId) {
-        loadComments(paperId);
-      }
-    } catch (e) {
-      console.log("parse failed", e);
-    }
-  }, [output]);
 
   if (loadingUser) {
         return <p>Loading...</p>;
       }
+
+
+  function highlightText(
+    text: string,
+    vocab: Array<{ term: string; definition: string }>
+  ) {
+    if (!text) return text;
+
+    // escape regex chars
+    const escapeRegex = (str: string) =>
+      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    // sort longest first (prevents "memory" matching inside "working memory")
+    const sortedVocab = [...vocab].sort(
+      (a, b) => b.term.length - a.term.length
+    );
+
+    let result: (string | JSX.Element)[] = [text];
+
+    sortedVocab.forEach(({ term, definition }) => {
+      const escaped = escapeRegex(term);
+
+      // match full phrase with word boundaries on edges
+      const regex = new RegExp(`(^|\\W)(${escaped})(?=\\W|$)`, "gi");
+
+      result = result.flatMap((part) => {
+        if (typeof part !== "string") return [part];
+
+        const pieces: (string | JSX.Element)[] = [];
+        let lastIndex = 0;
+
+        part.replace(regex, (match, before, matchedTerm, offset) => {
+          // push text before match
+          pieces.push(part.slice(lastIndex, offset + before.length));
+
+          // push highlighted term
+          pieces.push(
+            <span
+              key={matchedTerm + offset}
+              style={{
+                backgroundColor: "#fff3cd",
+                borderBottom: "1px dotted #333",
+                cursor: "help",
+              }}
+              title={definition}
+            >
+              {matchedTerm}
+            </span>
+          );
+
+          lastIndex = offset + before.length + matchedTerm.length;
+          return match;
+        });
+
+        // push remaining text
+        pieces.push(part.slice(lastIndex));
+
+        return pieces;
+      });
+    });
+
+    return result;
+  }
 
   return (
     <div style={{ 
@@ -245,7 +285,7 @@ export default function Home() {
       <Dialog open={openModal} onClose={() => setOpenModal(false)}>
         <DialogTitle>How does it work?</DialogTitle>
         <DialogContent>
-          {/* Add your text here */}
+          {`Upload a linguistics research paper in PDF format. Our system will analyze the paper and provide you with a detailed breakdown, including a summary, literature review, research questions, methodology, participants, findings, key vocabulary, and potential applications. You can also join the discussion by leaving comments on the paper's page. It's designed to help you quickly understand and engage with academic research!`}
         </DialogContent>
       </Dialog>
 
@@ -270,7 +310,7 @@ export default function Home() {
             textTransform: 'uppercase',
             marginBottom: 12
           }}
-          onClick={() => document.getElementById('file-input')?.click()}
+          // onClick={() => document.getElementById('file-input')?.click()}
         >
           Upload Research Paper
         </Button>
@@ -300,6 +340,8 @@ export default function Home() {
       {output && (() => {
         try {
           const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+          const vocabEntries = normalizeVocabulary(parsed);
+          // const paperKey = makePaperKey(parsed.title);
 
           return (
             <div>
@@ -333,14 +375,15 @@ export default function Home() {
                   <Tab label="Participants" value="participants" />
                   <Tab label="Findings" value="findings" />
                   <Tab label="Vocabulary" value="vocabulary" />
+                  <Tab label="Applications" value="applications" />
                 </Tabs>
                 <Box sx={{ flexGrow: 1, p: 3 }}>
-                  {selectedTab === 'summary' && <p>{parsed.summary}</p>}
-                  {selectedTab === 'litReview' && <p>{parsed.litReview}</p>}
-                  {selectedTab === 'researchQuestions' && <p>{parsed.researchQuestions}</p>}
-                  {selectedTab === 'methodology' && <p>{parsed.methodology}</p>}
-                  {selectedTab === 'participants' && <p>{parsed.participants}</p>}
-                  {selectedTab === 'findings' && <p>{parsed.findings}</p>}
+                  {selectedTab === 'summary' && <p>{highlightText(parsed.summary, vocabEntries)}</p>}
+                  {selectedTab === 'litReview' && <p>{highlightText(parsed.litReview, vocabEntries)}</p>}
+                  {selectedTab === 'researchQuestions' && <p>{highlightText(parsed.researchQuestions, vocabEntries)}</p>}
+                  {selectedTab === 'methodology' && <p>{highlightText(parsed.methodology, vocabEntries)}</p>}
+                  {selectedTab === 'participants' && <p>{highlightText(parsed.participants, vocabEntries)}</p>}
+                  {selectedTab === 'findings' && <p>{highlightText(parsed.findings, vocabEntries)}</p>}
                   {selectedTab === 'vocabulary' && (() => {
                     const vocabEntries = normalizeVocabulary(parsed);
                     return vocabEntries.length > 0 ? (
@@ -366,6 +409,7 @@ export default function Home() {
                       <p>No vocabulary entries were found.</p>
                     );
                   })()}
+                  {selectedTab === 'applications' && <p>{highlightText(parsed.applications, vocabEntries)}</p>}
                 </Box>
               </div>
             </div>
@@ -396,7 +440,7 @@ export default function Home() {
                 {comments.map((c) => (
                   <div key={c.id} style={{ padding: 8, borderBottom: '1px solid #ddd' }}>
                     <p style={{ margin: 0, fontWeight: 600 }}>
-                      {c.user_email || "anonymous"}
+                      {c.display_name || "anonymous"}
                     </p>
                     <p style={{ margin: 0 }}>{c.content}</p>
                   </div>
