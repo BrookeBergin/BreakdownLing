@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Button, Link, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import { useRouter } from "next/navigation";
 
 export default function NavBar() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -13,6 +14,8 @@ export default function NavBar() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const [displayName, setDisplayName] = useState('');
 
   useEffect(() => {
     // Get initial session
@@ -30,6 +33,13 @@ export default function NavBar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const openLogin = () => setLoginOpen(true);
+    window.addEventListener("open-login", openLogin);
+
+    return () => window.removeEventListener("open-login", openLogin);
+  }, []);
+
   const handleLogin = async () => {
     try {
       setLoginError('');
@@ -42,8 +52,6 @@ export default function NavBar() {
       setLoginOpen(false);
       setEmail('');
       setPassword('');
-      setConfirmPassword('');
-      setIsSignUp(false);
       setConfirmPassword('');
       setIsSignUp(false);
     } catch (error: any) {
@@ -68,6 +76,11 @@ export default function NavBar() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: displayName,
+          },
+        },
       });
       
       if (error) throw error;
@@ -78,6 +91,7 @@ export default function NavBar() {
       setPassword('');
       setConfirmPassword('');
       setIsSignUp(false);
+      setDisplayName('');
       
       // Note: User will need to check their email for confirmation
       alert('Please check your email to confirm your account!');
@@ -133,22 +147,29 @@ export default function NavBar() {
             About
             </Button>
         </Link>
-        <Link href="/tool" style={{ textDecoration: 'none' }}>
-            <Button 
-            sx={{ 
-                color: '#ffffff',
-                backgroundColor: '#1D2D44',
-                fontSize: '1rem',
-                fontWeight: '500',
-                textTransform: 'capitalize',
-                '&:hover': {
-                  backgroundColor: '#153854',
-                }
-            }}
-            >
-            Use the Tool
-            </Button>
-        </Link>
+          <Button 
+          onClick={async () => {
+          const { data } = await supabase.auth.getUser();
+
+          if (!data.user) {
+            window.dispatchEvent(new Event("open-login"));
+          } else {
+            router.push("/tool");
+          }
+        }}
+          sx={{ 
+              color: '#ffffff',
+              backgroundColor: '#1D2D44',
+              fontSize: '1rem',
+              fontWeight: '500',
+              textTransform: 'capitalize',
+              '&:hover': {
+                backgroundColor: '#153854',
+              }
+          }}
+          >
+          Use the Tool
+          </Button>
         <Button 
             sx={{ 
                 color: '#1D2D44',
@@ -170,6 +191,15 @@ export default function NavBar() {
       <Dialog open={loginOpen} onClose={() => setLoginOpen(false)}>
         <DialogTitle>{isSignUp ? 'Sign Up' : 'Login'}</DialogTitle>
         <DialogContent>
+          {isSignUp && (
+            <TextField
+              label="Display Name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+          )}
           <TextField
             label="Email"
             type="email"

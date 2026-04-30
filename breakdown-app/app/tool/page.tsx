@@ -188,7 +188,10 @@ export default function Home() {
       const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
-        router.push("/login"); // or "/"
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+        });
+        return;
       } else {
         setUser(data.user);
       }

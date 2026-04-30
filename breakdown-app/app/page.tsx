@@ -6,6 +6,8 @@ import { Typography, Button, Link } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
+import { useRouter } from "next/navigation";
+import { supabase } from "./lib/supabase";
 
 const CardStyle = styled(Paper)(({ theme }) => ({
   minHeight: 100,
@@ -17,7 +19,7 @@ const CardStyle = styled(Paper)(({ theme }) => ({
 }));
 
 export default function Home() {
-  
+  const router = useRouter();
 
   return (
     <div>
@@ -61,8 +63,16 @@ export default function Home() {
                     About
                     </Button>
                 </Link>
-                <Link href="/tool" style={{ textDecoration: 'none' }}>
                     <Button 
+                    onClick={async () => {
+                    const { data } = await supabase.auth.getUser();
+
+                    if (!data.user) {
+                    window.dispatchEvent(new Event("open-login"));
+                    } else {
+                    router.push("/tool");
+                    }
+                }}
                     variant="outlined"
                     sx={{ 
                         color: '#3E5C76',
@@ -76,7 +86,6 @@ export default function Home() {
                     >
                     Use the tool
                     </Button>
-                </Link>
             </div>
         </div>
         <div style={{ position: 'relative', width: '400px', height: '400px' }}>
