@@ -63,13 +63,39 @@ ${text}`;
 
     const userId = formData.get("userId");
 
-    await supabase.from("papers").insert({
-      user_id: userId,
-      title: parsed.title,
-      summary: parsed,
-    });
+    const normalizedTitle = parsed.title.toLowerCase().trim();
 
-    return Response.json({ output: parsed });
+    const { data: existing } = await supabase
+      .from("papers")
+      .select("paper_key")
+      .eq("title_normalized", normalizedTitle)
+      .maybeSingle();
+
+    let paperKey;
+
+    if (existing && existing.paper_key) {
+      // reuse existing key
+      paperKey = existing.paper_key;
+    } else {
+      // create new key
+      paperKey = crypto.randomUUID();
+
+      await supabase.from("papers").insert({
+        user_id: userId,
+        paper_key: paperKey,
+        title: parsed.title,
+        title_normalized: normalizedTitle,
+        summary: parsed,
+      });
+    }
+
+    // await supabase.from("papers").insert({
+    //   user_id: userId,
+    //   title: parsed.title,
+    //   summary: parsed,
+    // });
+
+    return Response.json({ output: parsed, paperKey });
 
   } catch (err: any) {
     console.error(err);

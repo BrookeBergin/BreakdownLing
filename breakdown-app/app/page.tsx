@@ -8,6 +8,8 @@ import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 import { useRouter } from "next/navigation";
 import { supabase } from "./lib/supabase";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+
 
 const CardStyle = styled(Paper)(({ theme }) => ({
   minHeight: 100,
@@ -15,7 +17,20 @@ const CardStyle = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
   textAlign: 'center',
   border: '1px solid #748cabff',
-  
+  position: 'relative',
+
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: '50%',
+    right: -10,
+    transform: 'translateY(-50%)',
+    width: 0,
+    height: 0,
+    borderTop: '8px solid transparent',
+    borderBottom: '8px solid transparent',
+    borderLeft: '10px solid #748cabff',
+  },
 }));
 
 export default function Home() {

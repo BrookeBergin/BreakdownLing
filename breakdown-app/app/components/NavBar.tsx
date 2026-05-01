@@ -93,8 +93,6 @@ export default function NavBar() {
       setIsSignUp(false);
       setDisplayName('');
       
-      // Note: User will need to check their email for confirmation
-      alert('Please check your email to confirm your account!');
       
     } catch (error: any) {
       setLoginError(error.message || 'Sign up failed');

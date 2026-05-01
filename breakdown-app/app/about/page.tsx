@@ -136,9 +136,9 @@ export default function Home() {
                       How Does Breakdown Help?
                   </p>
                   <p style={{maxWidth: "60%", margin: "0 auto", fontSize: 18}}>
-                    The goal of the tool is to <b>make linguistics research easy to understand</b> for non-linguistics. After uploading a file, the tool breaks it down into the most important categories (such as "participants" and "methodology"), making research easily digestible so practitioners can spend more time reflecting on implementation.
+                    The goal of this tool is to <b>make linguistics research easy to understand</b> for non-linguists. After uploading a file, Breakdown sections your paper into the most important categories (such as "participants" and "methodology"), making research easily digestible so you can spend more time reflecting on implementation!
                     <br></br><br></br>
-                    Additionally, the site allows users to provide feedback. This <b>fosters discussion</b>, both between researchers and across the r-p gap, allowing implementation ideas and real change begin to take shape. </p>
+                    The site allows users to provide feedback on papers! This <b>fosters discussion</b>, both between researchers and across the r-p gap, allowing implementation ideas and real change begin to take shape. We encourage comments on all papers, from both authors and readers. </p>
               </CardStyle>
             </motion.div>
             

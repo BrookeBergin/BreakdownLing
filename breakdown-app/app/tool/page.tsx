@@ -125,8 +125,7 @@ export default function Home() {
         ? JSON.parse(data.output)
         : data.output;
 
-    const key = await makePaperKey(parsed.title);
-    setPaperKey(key);
+    setPaperKey(data.paperKey);
     setOutput(parsed);
     setLoading(false);
   }
