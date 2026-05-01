@@ -25,7 +25,6 @@ export default function Home() {
   const [papers, setPapers] = useState<any[]>([]);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<any[]>([]);
-  // const [paperId, setPaperId] = useState<string | null>(null);
   const [paperKey, setPaperKey] = useState<string | null>(null);
   const router = useRouter();
   const [loadingUser, setLoadingUser] = useState(true);
@@ -134,7 +133,7 @@ export default function Home() {
     const { data } = await supabase
       .from("comments")
       .select("*")
-      .eq("paper_id", paperKey)
+      .eq("paper_key", paperKey)
       .order("created_at", { ascending: true });
 
     setComments(data || []);
