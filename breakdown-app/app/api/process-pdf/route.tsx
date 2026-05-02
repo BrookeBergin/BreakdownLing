@@ -95,6 +95,8 @@ ${text}`;
     //   summary: parsed,
     // });
 
+    console.log("KEY EXISTS:", !!process.env.GEMINI_API_KEY);
+    console.log("KEY LENGTH:", process.env.GEMINI_API_KEY?.length);
     return Response.json({ output: parsed, paperKey });
 
   } catch (err: any) {
