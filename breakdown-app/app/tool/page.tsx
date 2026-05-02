@@ -1,5 +1,7 @@
 "use client";
 
+import type { JSX } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
@@ -212,7 +214,7 @@ export default function Home() {
       (a, b) => b.term.length - a.term.length
     );
 
-    let result: (string | JSX.Element)[] = [text];
+    let result: (string | React.JSX.Element)[] = [text];
 
     sortedVocab.forEach(({ term, definition }) => {
       const escaped = escapeRegex(term);
@@ -223,7 +225,7 @@ export default function Home() {
       result = result.flatMap((part) => {
         if (typeof part !== "string") return [part];
 
-        const pieces: (string | JSX.Element)[] = [];
+        const pieces: (string | React.JSX.Element)[] = [];
         let lastIndex = 0;
 
         part.replace(regex, (match, before, matchedTerm, offset) => {
